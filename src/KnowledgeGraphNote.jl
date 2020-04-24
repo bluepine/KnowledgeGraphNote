@@ -1,6 +1,9 @@
 module KnowledgeGraphNote
 
 using LightGraphs
+using ParserCombinator
+using GraphIO
+using GraphIO.GML
 
 struct Concept
     name::String
@@ -44,15 +47,31 @@ function missing_concepts(concepts)
     return ret
 end
 
-# function digraph(concepts)
-#     g = SimpleDiGraph(length(concepts))
+get_concept_index(concepts) = Dict([(normalize_concept_name(concept.name), findfirst(x->x.name == concept.name, concepts)) for concept in concepts])
 
-# end
+function get_digraph(concepts)
+    g = SimpleDiGraph(length(concepts))
+    concept_index = get_concept_index(concepts)
+    for (index, concept) in enumerate(concepts)
+        if length(concept.dependency) > 0
+            for prerequisite in concept.dependency
+                nprerequisite = normalize_concept_name(prerequisite)
+                if haskey(concept_index, nprerequisite)
+                    # ignore missing concepts for now
+                    add_edge!(g, index, concept_index[nprerequisite])
+                end
+            end
+        end
+    end
+    return (g, concept_index)
+end
 
-# function find_cycles(concepts)
+function find_cycles(concepts)
+    g, concept_index = get_digraph(concepts)
+    #    savegraph("test.gml", g, "graph_name", GMLFormat())
+    cycles = simplecycles(g)
+    return [getfield.(concepts[cycle], :name) for cycle in cycles]
+end
 
-#     savegraph("test.gml", g, "graph_name", GraphIO.GML.GMLFormat())    
-# end
-
-export print_concepts, missing_concepts, get_duplicate_concepts, get_known_concepts
+export print_concepts, missing_concepts, get_duplicate_concepts, get_known_concepts, find_cycles
 end # module
