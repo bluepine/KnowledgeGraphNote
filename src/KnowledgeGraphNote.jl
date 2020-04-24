@@ -18,7 +18,7 @@ struct KnowledgeGraph
     idtoname::Array{String} # vertex id in graph => noramlized concept name
 end
 
-function print_concepts(concepts)
+function print_concepts(concepts::Array{Concept, 1})
     if isnothing(concepts)
         return
     end
@@ -55,7 +55,7 @@ function get_digraph(concepts)
 end
 
 # use an analyzer to hold the knowledge graph in memory so we don't have to recreate it as long as the concepts are not changed.
-function init_knowledge_graph(concepts)
+function init_knowledge_graph(concepts::Array{Concept, 1})
     g, nametoid, idtoname = get_digraph(concepts)
     return KnowledgeGraph(g, nametoid, idtoname)
 end
@@ -63,14 +63,14 @@ end
 get_known_concepts(concepts) = unique(normalize_concept_name.(getfield.(concepts, :name)))
 
 
-function get_duplicate_concepts(concepts)
+function get_duplicate_concepts(concepts::Array{Concept, 1})
     known_concepts = get_known_concepts(concepts)
     concept_occurrences = [(concept,count(c->normalize_concept_name(c.name)==concept, concepts)) for concept in known_concepts]
     duplicate_occurrences = Dict(filter(item -> item[2] > 1, concept_occurrences))
     return duplicate_occurrences
 end
 
-function missing_concepts(concepts)
+function missing_concepts(concepts::Array{Concept, 1})
     known_concepts = get_known_concepts(concepts)
     dependencies = reduce(concepts; init = Set()) do acc, concept
         acc = union(acc, Set(concept.dependency))
