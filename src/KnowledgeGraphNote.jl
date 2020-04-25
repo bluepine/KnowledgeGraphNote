@@ -134,7 +134,7 @@ procedure DFS-iterative(G, v) is
 
 this method is not recursive, because having the knowledge graph size limited by julia call stack size limit is not ok.
 
-this method will use a function to sort a vertex's neighbors before traversing them to guarantee deterministic ordering. notice that neighbors_sort_fn needs to output the reverse of your intended traverse order because we are using a stack to hold the sorted vertex.
+this method will use a function to sort a vertex's neighbors before traversing them to guarantee deterministic ordering. notice that neighbors_sort_fn needs to output the reverse of your intended traverse order because we are using a stack to hold the sorted vertex. you can supply nothing to neighbors_sort_fn to slightly speed up the program.
 """
 function dfs_postordering(graph::SimpleDiGraph, start::Int; neighbors_sort_fn = reverse ∘ sort)
     S = [start]
@@ -150,7 +150,10 @@ function dfs_postordering(graph::SimpleDiGraph, start::Int; neighbors_sort_fn = 
         if discovered[v] == 0
             discovered[v] = 1
             push!(preorder, v)
-            v_neighbors = neighbors_sort_fn(neighbors(graph, v))
+            v_neighbors = neighbors(graph, v)
+            if nothing != neighbors_sort_fn
+                v_neighbors = neighbors_sort_fn(v_neighbors)
+            end
             println("v $(v)'s sorted neighbors: $(v_neighbors)")
             v_neighbors_discovered = 0
             v_first_undiscovered_neighbor = 0
