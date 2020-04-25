@@ -13,7 +13,11 @@ include("notes.jl")
     @test length(KnowledgeGraphNote.find_cycles(mathkg)) == 0
     cyclickg = KnowledgeGraphNote.init_knowledge_graph(cyclic_notes)
     @test [["a", "b", "c"]] == KnowledgeGraphNote.find_cycles(cyclickg)
+
+
+    # # it's not a good idea to write files in unit tests. i'll have to come up with something else to unittest these two functions
+    # KnowledgeGraphNote.export_knowledge_graph(mathkg, "./math.dot")
+    # KnowledgeGraphNote.export_knowledge_graph_towards_target(mathkg, "borel sigma-algebra", "./mathradonmeasure.dot")
     
-    println(KnowledgeGraphNote.get_learning_plan(mathkg, math_notes,  "Borel measure"))
-    KnowledgeGraphNote.export_knowledge_graph(mathkg, "./math.dot")
+#    println(KnowledgeGraphNote.generate_learning_plan(mathkg, math_notes,  "Borel measure"))
 end

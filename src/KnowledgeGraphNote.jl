@@ -84,12 +84,12 @@ function find_cycles(kg::KnowledgeGraph)
     return [kg.idtoname[cycle] for cycle in cycles]
 end
 
-function generate_dot_string(kg::KnowledgeGraph)
-    dot = ["DiGraph KnowledgeGraph {"]
-    for v in vertices(kg.graph)
-        push!(dot, "$(v) [label=\"$(kg.idtoname[v])\"];")        
+function generate_dot_string(graph::SimpleDiGraph, idtoname::Array{String}, name::String)
+    dot = ["DiGraph $(name) {"]
+    for v in vertices(graph)
+        push!(dot, "$(v) [label=\"$(idtoname[v])\"];")        
     end
-    for e in edges(kg.graph)
+    for e in edges(graph)
         push!(dot, "$(e.src) -> $(e.dst);")
     end
     push!(dot, "}")
@@ -101,17 +101,23 @@ write_string_to_file(str::String, path::String) =  open(path, "w") do io
 end
 
 function export_knowledge_graph(kg::KnowledgeGraph, path::String)
-    dot = generate_dot_string(kg)
+    dot = generate_dot_string(kg.graph, kg.idtoname, "KnowledgeGraph")
     write_string_to_file(dot, path)
 end
 
 
-function export_knowledge_tree(kg::KnowledgeGraph, root::String, path::String)
-    
+function export_knowledge_graph_towards_target(kg::KnowledgeGraph, target::String, path::String)
+    ntarget = normalize_concept_name(target)
+    parent_vector = bfs_parents(kg.graph, kg.nametoid[ntarget])
+    subgraph_vertices = [index for (index, parent) in enumerate(parent_vector) if parent > 0]
+    println(subgraph_vertices)
+    subgraph, vmap = induced_subgraph(kg.graph, subgraph_vertices)    
+    dot = generate_dot_string(subgraph, kg.idtoname[vmap], filter(c-> (c>='a' && c<='z'), ntarget))
+    write_string_to_file(dot, path)
 end
 
 
-function get_learning_plan(kg::KnowledgeGraph, concepts::Array{Concept, 1}, target::String)
+function generate_learning_plan(kg::KnowledgeGraph, concepts::Array{Concept, 1}, target::String)
     ntarget = normalize_concept_name(target)
     if haskey(kg.nametoid, ntarget)
         missing_concepts = Set(get_missing_concepts(concepts))
@@ -123,5 +129,5 @@ function get_learning_plan(kg::KnowledgeGraph, concepts::Array{Concept, 1}, targ
     end
 end
 
-export init_analyer, print_concepts, get_missing_concepts, get_duplicate_concepts, get_known_concepts, find_cycles, init_knowledge_graph, export_knowledge_tree, export_knowledge_graph, get_learning_plan
+export init_analyer, print_concepts, get_missing_concepts, get_duplicate_concepts, get_known_concepts, find_cycles, init_knowledge_graph, export_knowledge_tree, export_knowledge_graph_towards_target, generate_learning_plan
 end # module
