@@ -131,8 +131,12 @@ procedure DFS-iterative(G, v) is
             label v as discovered
             for all edges from v to w in G.adjacentEdges(v) do 
                 S.push(w)
+
+this method is not recursive, because having the knowledge graph size limited by julia call stack size limit is not ok.
+
+this method will use a function to sort a vertex's neighbors before traversing them to guarantee deterministic ordering. notice that neighbors_sort_fn needs to output the reverse of your intended traverse order because we are using a stack to hold the sorted vertex.
 """
-function dfs_postordering(graph::SimpleDiGraph, start::Int)
+function dfs_postordering(graph::SimpleDiGraph, start::Int; neighbors_sort_fn = reverse ∘ sort)
     S = [start]
     n = nv(graph)
     recursive_postorder_callstack = Array{Tuple{Int, Int}}(undef, 0) # dfs post order is much easier to understand in recursive traversal. so we try to picture what would happen in recursive traversal to compute post order
@@ -146,7 +150,8 @@ function dfs_postordering(graph::SimpleDiGraph, start::Int)
         if discovered[v] == 0
             discovered[v] = 1
             push!(preorder, v)
-            v_neighbors = neighbors(graph, v)
+            v_neighbors = neighbors_sort_fn(neighbors(graph, v))
+            println("v $(v)'s sorted neighbors: $(v_neighbors)")
             v_neighbors_discovered = 0
             v_first_undiscovered_neighbor = 0
             for w in v_neighbors
@@ -166,11 +171,14 @@ function dfs_postordering(graph::SimpleDiGraph, start::Int)
                 push!(postorder, v)
                 # now check if v is it's parent's first undiscovered neighbor
                 while length(recursive_postorder_callstack) > 0 && recursive_postorder_callstack[end][2] == v
+                    v_parent = recursive_postorder_callstack[end][2]
                     #all of v's parent's neighbors have been pushed to postorder.
-                    frame = pop!(recursive_postorder_callstack)
-                    println("poping $(frame) from recursive_postorder_callstack for v: $(v)")
-                    v_parent = frame[1]
-                    push!(postorder, v_parent)
+                    while length(recursive_postorder_callstack) > 0 && recursive_postorder_callstack[end][2] == v
+                        frame = pop!(recursive_postorder_callstack)
+                        println("poping $(frame) from recursive_postorder_callstack for v: $(v)")
+                        v_parent = frame[1]
+                        push!(postorder, v_parent)
+                    end
                     v = v_parent #important! let's move on to check v's parent's parent
                 end
             else

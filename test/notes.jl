@@ -179,3 +179,21 @@ cyclic_notes = [
     Concept("b", "empty link", ["c"], "empty text"),
     Concept("c", "empty link", ["a"], "empty text"),
 ]
+
+#using the example from https://eli.thegreenplace.net/2015/directed-graph-traversal-orderings-and-applications-to-data-flow-analysis/
+dfs_postordering_test1 = [
+    Concept("A", "", ["T", "B", "C"], ""),
+    Concept("B", "", ["D"], ""),
+    Concept("C", "", ["B", "E"], ""),
+    Concept("D", "", [], ""),
+    Concept("E", "", ["D"], ""),
+    Concept("T", "", ["B"], ""),
+]
+
+#using the example from https://en.wikipedia.org/wiki/Depth-first_search#Vertex_orderings
+dfs_postordering_test2 = [
+    Concept("A", "", ["B", "C"], ""),
+    Concept("B", "", ["D"], ""),
+    Concept("C", "", ["B", "E"], ""),
+    Concept("D", "", [], ""),
+]

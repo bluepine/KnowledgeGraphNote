@@ -18,6 +18,16 @@ include("notes.jl")
     # KnowledgeGraphNote.export_knowledge_graph(mathkg, "./math.dot")
     # KnowledgeGraphNote.export_knowledge_graph_towards_target(mathkg, "borel sigma-algebra", "./mathradonmeasure.dot")
     
+
+    dfs_postordering_test1_kg = KnowledgeGraphNote.init_knowledge_graph(dfs_postordering_test1)
+    KnowledgeGraphNote.export_knowledge_graph(dfs_postordering_test1_kg, "./dfs_postordering_test1.dot")
+    (postorder, subgraph_size) = KnowledgeGraphNote.dfs_postordering(dfs_postordering_test1_kg.graph, 1)
+    @test ["d", "b", "e", "c", "t", "a"] == dfs_postordering_test1_kg.idtoname[postorder]
+
+    dfs_postordering_test2_kg = KnowledgeGraphNote.init_knowledge_graph(dfs_postordering_test2)
+    KnowledgeGraphNote.export_knowledge_graph(dfs_postordering_test2_kg, "./dfs_postordering_test2.dot")
+    (postorder, subgraph_size) = KnowledgeGraphNote.dfs_postordering(dfs_postordering_test2_kg.graph, 1)
+    @test ["d", "b", "c", "a"] == dfs_postordering_test2_kg.idtoname[postorder]
+
     #    println(KnowledgeGraphNote.generate_learning_plan(mathkg, math_notes,  "Borel measure"))
-    println(KnowledgeGraphNote.dfs_postordering(mathkg.graph, 1))
 end
