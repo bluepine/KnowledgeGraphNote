@@ -3,7 +3,6 @@ using Test
 include("notes.jl")
 
 @testset "KnowledgeGraphNote.jl" begin
-    # println("testing functions: $(names(KnowledgeGraphNote)[2:end])")
     # KnowledgeGraphNote.print_concepts(math_notes)
     @test Set(["affinely independent", "measure", "limit point", "empty set", "power set", "neighborhood", "set closure", "compact set"]) == Set(KnowledgeGraphNote.get_missing_concepts(math_notes))
     @test Dict("a"=>2) == KnowledgeGraphNote.get_duplicate_concepts(duplicate_notes)
@@ -19,5 +18,6 @@ include("notes.jl")
     # KnowledgeGraphNote.export_knowledge_graph(mathkg, "./math.dot")
     # KnowledgeGraphNote.export_knowledge_graph_towards_target(mathkg, "borel sigma-algebra", "./mathradonmeasure.dot")
     
-#    println(KnowledgeGraphNote.generate_learning_plan(mathkg, math_notes,  "Borel measure"))
+    #    println(KnowledgeGraphNote.generate_learning_plan(mathkg, math_notes,  "Borel measure"))
+    println(KnowledgeGraphNote.dfs_postordering(mathkg.graph, 1))
 end

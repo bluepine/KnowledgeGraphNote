@@ -116,6 +116,75 @@ function export_knowledge_graph_towards_target(kg::KnowledgeGraph, target::Strin
     write_string_to_file(dot, path)
 end
 
+"""
+please make sure there are no loops in the graph before calling this function.
+return value: (postordering ordered vector of vertices traversed by by dfs, Dict mapping vertice id to number of nodes in its own dfs traversal subgraph)
+
+using the non-recursive dfs pseudocode from https://en.wikipedia.org/wiki/Depth-first_search#Pseudocode
+
+procedure DFS-iterative(G, v) is
+    let S be a stack
+    S.push(v)
+    while S is not empty do
+        v = S.pop()
+        if v is not labeled as discovered then
+            label v as discovered
+            for all edges from v to w in G.adjacentEdges(v) do 
+                S.push(w)
+"""
+function dfs_postordering(graph::SimpleDiGraph, start::Int)
+    S = [start]
+    n = nv(graph)
+    recursive_postorder_callstack = Array{Tuple{Int, Int}}(undef, 0) # dfs post order is much easier to understand in recursive traversal. so we try to picture what would happen in recursive traversal to compute post order
+    postorder = Array{Int}(undef, 0)
+    preorder = Array{Int}(undef, 0)    
+    subgraph_size = Dict{Int, Int}()
+    discovered = BitArray(undef, n) .& 0 # a hash optimized for worst case senario
+
+    while length(S) > 0
+        v = pop!(S)
+        if discovered[v] == 0
+            discovered[v] = 1
+            push!(preorder, v)
+            v_neighbors = neighbors(graph, v)
+            v_neighbors_discovered = 0
+            v_first_undiscovered_neighbor = 0
+            for w in v_neighbors
+                if discovered[w] == 0
+                    # only push undiscovered neighbors
+                    push!(S, w)
+                    if 0 == v_first_undiscovered_neighbor
+                        v_first_undiscovered_neighbor = w
+                    end
+                else
+                    v_neighbors_discovered += 1
+                end
+            end
+
+            if v_neighbors_discovered == length(v_neighbors)
+                # all of v's neighbors have been discovered. this is the last time we'll visit v
+                push!(postorder, v)
+                # now check if v is it's parent's first undiscovered neighbor
+                while length(recursive_postorder_callstack) > 0 && recursive_postorder_callstack[end][2] == v
+                    #all of v's parent's neighbors have been pushed to postorder.
+                    frame = pop!(recursive_postorder_callstack)
+                    println("poping $(frame) from recursive_postorder_callstack for v: $(v)")
+                    v_parent = frame[1]
+                    push!(postorder, v_parent)
+                    v = v_parent #important! let's move on to check v's parent's parent
+                end
+            else
+                # some of v's neighbors have not been discovered. they are pushed to S.
+                println("pushing to recursive_postorder_callstack: $((v, v_first_undiscovered_neighbor))")
+                push!(recursive_postorder_callstack, (v, v_first_undiscovered_neighbor))
+            end
+        end
+    end
+    println("preorder: $(preorder)")
+    println("postorder: $(postorder)")
+    println("recursive_postorder_callstack: $(recursive_postorder_callstack)")
+    return (postorder, subgraph_size)
+end
 
 function generate_learning_plan(kg::KnowledgeGraph, concepts::Array{Concept, 1}, target::String)
     ntarget = normalize_concept_name(target)
