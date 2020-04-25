@@ -1,9 +1,7 @@
 module KnowledgeGraphNote
 
 using LightGraphs
-using ParserCombinator
-using GraphIO
-using GraphIO.GML
+
 
 struct Concept
     name::String
@@ -14,8 +12,8 @@ end
 
 struct KnowledgeGraph
     graph::SimpleDiGraph
-    nametoid::Dict{String,Int} # noramlized concept name => vertex id in graph
-    idtoname::Array{String} # vertex id in graph => noramlized concept name
+    nametoid::Dict{String,Int} # normalized concept name => vertex id in graph
+    idtoname::Array{String} # vertex id in graph => normalized concept name
 end
 
 function print_concepts(concepts::Array{Concept, 1})
@@ -54,7 +52,8 @@ function get_digraph(concepts)
     return (g, concept_index, [normalize_concept_name(concept.name) for concept in concepts])
 end
 
-# use an analyzer to hold the knowledge graph in memory so we don't have to recreate it as long as the concepts are not changed.
+# use an struct to hold the knowledge graph in memory so we don't have to recreate it as long as the concepts are not changed.
+# it is advised to check duplicate concepts before creating knowledge graph.
 function init_knowledge_graph(concepts::Array{Concept, 1})
     g, nametoid, idtoname = get_digraph(concepts)
     return KnowledgeGraph(g, nametoid, idtoname)
@@ -70,7 +69,7 @@ function get_duplicate_concepts(concepts::Array{Concept, 1})
     return duplicate_occurrences
 end
 
-function missing_concepts(concepts::Array{Concept, 1})
+function get_missing_concepts(concepts::Array{Concept, 1})
     known_concepts = get_known_concepts(concepts)
     dependencies = reduce(concepts; init = Set()) do acc, concept
         acc = union(acc, Set(concept.dependency))
@@ -85,5 +84,44 @@ function find_cycles(kg::KnowledgeGraph)
     return [kg.idtoname[cycle] for cycle in cycles]
 end
 
-export init_analyer, print_concepts, missing_concepts, get_duplicate_concepts, get_known_concepts, find_cycles, init_knowledge_graph
+function generate_dot_string(kg::KnowledgeGraph)
+    dot = ["DiGraph KnowledgeGraph {"]
+    for v in vertices(kg.graph)
+        push!(dot, "$(v) [label=\"$(kg.idtoname[v])\"];")        
+    end
+    for e in edges(kg.graph)
+        push!(dot, "$(e.src) -> $(e.dst);")
+    end
+    push!(dot, "}")
+    return join(dot, "\n")    
+end
+
+write_string_to_file(str::String, path::String) =  open(path, "w") do io
+    write(io, str)
+end
+
+function export_knowledge_graph(kg::KnowledgeGraph, path::String)
+    dot = generate_dot_string(kg)
+    write_string_to_file(dot, path)
+end
+
+
+function export_knowledge_tree(kg::KnowledgeGraph, root::String, path::String)
+    
+end
+
+
+function get_learning_plan(kg::KnowledgeGraph, concepts::Array{Concept, 1}, target::String)
+    ntarget = normalize_concept_name(target)
+    if haskey(kg.nametoid, ntarget)
+        missing_concepts = Set(get_missing_concepts(concepts))
+        learning_order = []
+        return (missing_concepts, learning_order)
+    else
+        println("$(target) is not in knowledge graph.")
+        return ()
+    end
+end
+
+export init_analyer, print_concepts, get_missing_concepts, get_duplicate_concepts, get_known_concepts, find_cycles, init_knowledge_graph, export_knowledge_tree, export_knowledge_graph, get_learning_plan
 end # module
