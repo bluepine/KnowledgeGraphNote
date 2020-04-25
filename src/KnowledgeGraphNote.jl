@@ -118,7 +118,7 @@ end
 
 """
 please make sure there are no loops in the graph before calling this function.
-return value: (postordering ordered vector of vertices traversed by by dfs, Dict mapping vertice id to number of nodes in its own dfs traversal subgraph)
+return value: postordering ordered vector of vertices traversed by by dfs
 
 using the non-recursive dfs pseudocode from https://en.wikipedia.org/wiki/Depth-first_search#Pseudocode
 
@@ -142,7 +142,6 @@ function dfs_postordering(graph::SimpleDiGraph, start::Int; neighbors_sort_fn = 
     recursive_postorder_callstack = Array{Tuple{Int, Int}}(undef, 0) # dfs post order is much easier to understand in recursive traversal. so we try to picture what would happen in recursive traversal to compute post order
     postorder = Array{Int}(undef, 0)
     preorder = Array{Int}(undef, 0)    
-    subgraph_size = Dict{Int, Int}()
     discovered = BitArray(undef, n) .& 0 # a hash optimized for worst case senario
 
     while length(S) > 0
@@ -194,7 +193,7 @@ function dfs_postordering(graph::SimpleDiGraph, start::Int; neighbors_sort_fn = 
     println("preorder: $(preorder)")
     println("postorder: $(postorder)")
     println("recursive_postorder_callstack: $(recursive_postorder_callstack)")
-    return (postorder, subgraph_size)
+    return postorder
 end
 
 function generate_learning_plan(kg::KnowledgeGraph, concepts::Array{Concept, 1}, target::String)

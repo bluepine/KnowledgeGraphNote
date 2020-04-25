@@ -197,3 +197,13 @@ dfs_postordering_test2 = [
     Concept("C", "", ["B", "E"], ""),
     Concept("D", "", [], ""),
 ]
+
+
+dfs_postordering_test3 = [
+    Concept("A", "", ["B", "C"], ""),
+    Concept("B", "", ["E"], ""),
+    Concept("C", "", ["D"], ""),
+    Concept("D", "", ["F"], ""),
+    Concept("E", "", ["F"], ""),
+    Concept("F", "", [], ""),
+]
