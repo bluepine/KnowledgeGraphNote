@@ -1,7 +1,7 @@
 module KnowledgeGraphNote
 
 using LightGraphs
-
+using UUIDs
 
 struct Concept
     name::String
@@ -279,5 +279,42 @@ function generate_learning_plan(kg::KnowledgeGraph, target::String)
     
 end
 
-export init_analyer, print_concepts, get_missing_concepts, get_duplicate_concepts, get_known_concepts, find_cycles, init_knowledge_graph, export_knowledge_tree, export_knowledge_graph_towards_target, generate_learning_plan
+"""
+perhaps we can also code a function to write all notes to a file, ordered by generate_learning_plan. that requires us to identify all the root concepts (concepts which no other concepts depends on) in the knowledge graph.
+but i don't think i need that. i think it's good to always have a target concept in mind when reading notes.
+"""
+
+function write_notes_for_target_concept_to_md_file(kg::KnowledgeGraph, concepts::Array{Concept, 1}, target::String, path::String)
+    ntarget = normalize_concept_name(target)
+    lines = ["# notes for $(target)"]
+    learning_plan = generate_learning_plan(kg, ntarget)
+    idtouuid = Dict{Int, UUID}()
+    missing_concept_set = get_missing_concepts(concepts)
+    for id in learning_plan
+        concept = concepts[id]
+        uuid = uuid4()
+        idtouuid[id] = uuid
+        push!(lines, "## [$(concept.name)](#$(uuid))")
+        push!(lines, "### link: [$(concept.link)]($(concept.link))")
+        if length(concept.dependency) > 0
+            push!(lines, "### prerequisites")
+            for prerequisite_concept in concept.dependency
+                nprerequisite = normalize_concept_name(prerequisite_concept)
+                if nprerequisite in missing_concept_set
+                    push!(lines, "missing: $(prerequisite_concept)")                    
+                else
+                    prerequisite_uuid = idtouuid[kg.nametoid[nprerequisite]]
+                    push!(lines, "[$(prerequisite_concept)](#$(prerequisite_uuid))")                    
+                end
+            end
+            push!(lines, "  \n### definition")
+            push!(lines, concept.text)
+            push!(lines, "  \n--------------------------------  \n")
+        end
+    end
+    md_text = join(lines, "  \n")
+    write_string_to_file(md_text, path)
+end
+
+export init_analyer, print_concepts, get_missing_concepts, get_duplicate_concepts, get_known_concepts, find_cycles, init_knowledge_graph, export_knowledge_tree, export_knowledge_graph_towards_target, generate_learning_plan, write_notes_for_target_concept_to_md_file
 end # module

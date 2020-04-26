@@ -24,7 +24,7 @@ include("notes.jl")
     # # it's not a good idea to write files in unit tests. i'll have to come up with something else to unittest these two functions
     # KnowledgeGraphNote.export_knowledge_graph(mathkg, "./math.dot")
     # KnowledgeGraphNote.export_knowledge_graph_towards_target(mathkg, target, "./target.dot")
-
+    # KnowledgeGraphNote.write_notes_for_target_concept_to_md_file(mathkg, math_notes, target, "./target.md")
 
     
 ######################### testing library internal functions
