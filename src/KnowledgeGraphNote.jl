@@ -283,7 +283,6 @@ end
 perhaps we can also code a function to write all notes to a file, ordered by generate_learning_plan. that requires us to identify all the root concepts (concepts which no other concepts depends on) in the knowledge graph.
 but i don't think i need that. i think it's good to always have a target concept in mind when reading notes.
 """
-
 function write_notes_for_target_concept_to_md_file(kg::KnowledgeGraph, concepts::Array{Concept, 1}, target::String, path::String)
     ntarget = normalize_concept_name(target)
     lines = ["# notes for $(target)"]
