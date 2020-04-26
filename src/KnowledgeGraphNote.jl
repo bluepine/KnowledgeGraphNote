@@ -319,5 +319,5 @@ function write_notes_for_target_concept_to_md_file(kg::KnowledgeGraph, concepts:
     write_string_to_file(md_text, path)
 end
 
-export print_concepts, get_missing_concepts, get_duplicate_concepts, get_known_concepts, find_cycles, init_knowledge_graph,  export_knowledge_graph_towards_target, generate_learning_plan, write_notes_for_target_concept_to_md_file
+export print_concepts, get_missing_concepts, get_duplicate_concepts, get_known_concepts, find_cycles, init_knowledge_graph,  export_knowledge_graph_towards_target, generate_learning_plan, write_notes_for_target_concept_to_md_file, export_knowledge_graph
 end # module
