@@ -108,8 +108,8 @@ end
 
 function export_knowledge_graph_towards_target(kg::KnowledgeGraph, target::String, path::String)
     ntarget = normalize_concept_name(target)
-    subgraph_vertices = dfs_postordering(kg.graph, kg.nametoid[ntarget], neighbors_sort_fn=nothing)
-    println(subgraph_vertices)
+    subgraph_vertices = dfs_preordering(kg.graph, kg.nametoid[ntarget])
+    # println(subgraph_vertices)
     subgraph, vmap = induced_subgraph(kg.graph, subgraph_vertices)    
     dot = generate_dot_string(subgraph, kg.idtoname[vmap], filter(c-> (c>='a' && c<='z'), ntarget))
     write_string_to_file(dot, path)
@@ -140,14 +140,14 @@ function dfs_postordering(graph::SimpleDiGraph, start::Int; neighbors_sort_fn = 
     n = nv(graph)
     recursive_postorder_callstack = Array{Tuple{Int, Int}}(undef, 0) # dfs post order is much easier to understand in recursive traversal. so we try to picture what would happen in recursive traversal to compute post order
     postorder = Array{Int}(undef, 0)
-    preorder = Array{Int}(undef, 0)    
+    # preorder = Array{Int}(undef, 0)    
     discovered = BitArray(undef, n) .& 0 # a hash optimized for worst case senario
 
     while length(S) > 0
         v = pop!(S)
         if discovered[v] == 0
             discovered[v] = 1
-            push!(preorder, v)
+            # push!(preorder, v)
             v_neighbors = neighbors(graph, v)
             if nothing != neighbors_sort_fn
                 v_neighbors = neighbors_sort_fn(v_neighbors)
@@ -197,6 +197,46 @@ end
 
 
 """
+using the non-recursive dfs pseudocode from https://en.wikipedia.org/wiki/Depth-first_search#Pseudocode
+
+procedure DFS-iterative(G, v) is
+    let S be a stack
+    S.push(v)
+    while S is not empty do
+        v = S.pop()
+        if v is not labeled as discovered then
+            label v as discovered
+            for all edges from v to w in G.adjacentEdges(v) do 
+                S.push(w)
+
+why dfs_preordering when i already coded dfs_postordering? because dfs_preordering is more efficient when computing the collection of vertexes in the start vertexes' subgraph.
+"""
+function dfs_preordering(graph::SimpleDiGraph, start::Int)
+    S = [start]
+    n = nv(graph)
+    preorder = Array{Int}(undef, 0)    
+    discovered = BitArray(undef, n) .& 0 # a hash optimized for worst case senario
+
+    while length(S) > 0
+        v = pop!(S)
+        if discovered[v] == 0
+            discovered[v] = 1
+            push!(preorder, v)
+            v_neighbors = neighbors(graph, v)
+            for w in v_neighbors
+                if discovered[w] == 0
+                    # only push undiscovered neighbors
+                    push!(S, w)
+                end
+            end
+        end
+    end
+    # println("preorder: $(preorder)")
+    return preorder
+end
+
+
+"""
 given a target concept, compute a sequence to learn all of its prerequisite concepts. every concept in this sequence will have its own prerequisites placed before it.
 
 given the above definition, the result sequence is a reverse of the topological sort (https://en.wikipedia.org/wiki/Topological_sorting) of the subgraph induced by target.
@@ -221,11 +261,11 @@ function generate_learning_plan(kg::KnowledgeGraph, target::String)
     end
     targetid = kg.nametoid[ntarget]
     subgraph_size_dict = Dict{Int, Int}()
-    subgraph_vertexes = dfs_postordering(kg.graph, targetid, neighbors_sort_fn=nothing)
+    subgraph_vertexes = dfs_preordering(kg.graph, targetid)
     subgraph_size_dict[targetid] = length(subgraph_vertexes)
-    pop!(subgraph_vertexes)
+    deleteat!(subgraph_vertexes, 1)
     for vertex in subgraph_vertexes
-        subgraph_size_dict[vertex] = length(dfs_postordering(kg.graph, vertex, neighbors_sort_fn=nothing))
+        subgraph_size_dict[vertex] = length(dfs_preordering(kg.graph, vertex))
     end
     sort_fn = children -> sort(children, lt=(x, y)->subgraph_size_dict[x] > subgraph_size_dict[y])
     learning_order = dfs_postordering(kg.graph, targetid, neighbors_sort_fn=sort_fn)
