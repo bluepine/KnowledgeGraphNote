@@ -294,10 +294,10 @@ function write_notes_for_target_concept_to_md_file(kg::KnowledgeGraph, concepts:
         uuid = uuid4()
         idtouuid[id] = uuid
         push!(lines, "## <a id=\"$(uuid)\"></a>$(concept.name)")
-        push!(lines, "### link: [$(concept.link)]($(concept.link))")
+        push!(lines, "### link\n  [$(concept.link)]($(concept.link))")
 
         if length(concept.dependency) > 0
-            push!(lines, "### prerequisites")
+            push!(lines, "\n### prerequisites")
             prerequisite_lines = []
             for prerequisite_concept in concept.dependency
                 nprerequisite = normalize_concept_name(prerequisite_concept)
@@ -312,7 +312,7 @@ function write_notes_for_target_concept_to_md_file(kg::KnowledgeGraph, concepts:
         end
         push!(lines, "\n### definition  ")
         push!(lines, concept.text)
-        push!(lines, "\n  \n--------------------------------  \n")
+        push!(lines, "\n  \n----  \n")
     end
 
     md_text = join(lines, "\n")
