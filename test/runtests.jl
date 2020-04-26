@@ -18,9 +18,9 @@ include("notes.jl")
     # println(KnowledgeGraphNote.generate_learning_plan(mathkg, math_notes,  "Borel measure"))
     
     # # it's not a good idea to write files in unit tests. i'll have to come up with something else to unittest these two functions
-    # KnowledgeGraphNote.export_knowledge_graph(mathkg, "./math.dot")
-    # KnowledgeGraphNote.export_knowledge_graph_towards_target(mathkg, "borel sigma-algebra", "./mathradonmeasure.dot")
-    
+    KnowledgeGraphNote.export_knowledge_graph(mathkg, "./math.dot")
+    KnowledgeGraphNote.export_knowledge_graph_towards_target(mathkg, "borel sigma-algebra", "./mathradonmeasure.dot")
+    println(mathkg.idtoname[KnowledgeGraphNote.generate_learning_plan(mathkg, "borel sigma-algebra")])
 
 
 

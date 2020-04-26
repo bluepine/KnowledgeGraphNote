@@ -108,8 +108,7 @@ end
 
 function export_knowledge_graph_towards_target(kg::KnowledgeGraph, target::String, path::String)
     ntarget = normalize_concept_name(target)
-    parent_vector = bfs_parents(kg.graph, kg.nametoid[ntarget])
-    subgraph_vertices = [index for (index, parent) in enumerate(parent_vector) if parent > 0]
+    subgraph_vertices = dfs_postordering(kg.graph, kg.nametoid[ntarget], neighbors_sort_fn=nothing)
     println(subgraph_vertices)
     subgraph, vmap = induced_subgraph(kg.graph, subgraph_vertices)    
     dot = generate_dot_string(subgraph, kg.idtoname[vmap], filter(c-> (c>='a' && c<='z'), ntarget))
@@ -153,7 +152,7 @@ function dfs_postordering(graph::SimpleDiGraph, start::Int; neighbors_sort_fn = 
             if nothing != neighbors_sort_fn
                 v_neighbors = neighbors_sort_fn(v_neighbors)
             end
-            println("v $(v)'s sorted neighbors: $(v_neighbors)")
+            # println("v $(v)'s sorted neighbors: $(v_neighbors)")
             v_neighbors_discovered = 0
             v_first_undiscovered_neighbor = 0
             for w in v_neighbors
@@ -177,7 +176,7 @@ function dfs_postordering(graph::SimpleDiGraph, start::Int; neighbors_sort_fn = 
                     #all of v's parent's neighbors have been pushed to postorder.
                     while length(recursive_postorder_callstack) > 0 && recursive_postorder_callstack[end][2] == v
                         frame = pop!(recursive_postorder_callstack)
-                        println("poping $(frame) from recursive_postorder_callstack for v: $(v)")
+                        # println("poping $(frame) from recursive_postorder_callstack for v: $(v)")
                         v_parent = frame[1]
                         push!(postorder, v_parent)
                     end
@@ -185,27 +184,53 @@ function dfs_postordering(graph::SimpleDiGraph, start::Int; neighbors_sort_fn = 
                 end
             else
                 # some of v's neighbors have not been discovered. they are pushed to S.
-                println("pushing to recursive_postorder_callstack: $((v, v_first_undiscovered_neighbor))")
+                # println("pushing to recursive_postorder_callstack: $((v, v_first_undiscovered_neighbor))")
                 push!(recursive_postorder_callstack, (v, v_first_undiscovered_neighbor))
             end
         end
     end
-    println("preorder: $(preorder)")
-    println("postorder: $(postorder)")
-    println("recursive_postorder_callstack: $(recursive_postorder_callstack)")
+    # println("preorder: $(preorder)")
+    # println("postorder: $(postorder)")
+    # println("recursive_postorder_callstack: $(recursive_postorder_callstack)")
     return postorder
 end
 
-function generate_learning_plan(kg::KnowledgeGraph, concepts::Array{Concept, 1}, target::String)
+
+"""
+given a target concept, compute a sequence to learn all of its prerequisite concepts. every concept in this sequence will have its own prerequisites placed before it.
+
+given the above definition, the result sequence is a reverse of the topological sort (https://en.wikipedia.org/wiki/Topological_sorting) of the subgraph induced by target.
+
+please make sure the knowledge graph contains no cycles before calling this function. in other words, please make sure the input knowledge graph is a dag.
+
+since reverse postordering of dfs travsersal of dag produces a topological sorting (https://en.wikipedia.org/wiki/Depth-first_search#Vertex_orderings), we'll just use dfs postordering to produce the result sequence.
+
+dfs postordering ensures that every vertex is placed adjacent to its descendants. i think this is good for maintaining relevenance concepts in working memory while learning.
+
+however dfs postordering might not be unqiue for a dag. i would use a special sorting function to determine the order in which a vertex's children is visited in dfs.
+
+this sorting function will prioritize the children that have smaller induced subgraph. the rationale is that we'll try to make the most progress towards the target concept as early as possible, by picking the lowest hanging fruit first.
+
+dfs traversal can provide the size of induced subgraph for a vertex. however i haven't found a way to compute induced subgraph size for all vertexes in a graph efficiently. so for now i'm using brutal force approach, doing a dfs for every single vertex concerned.
+"""
+function generate_learning_plan(kg::KnowledgeGraph, target::String)
     ntarget = normalize_concept_name(target)
-    if haskey(kg.nametoid, ntarget)
-        missing_concepts = Set(get_missing_concepts(concepts))
-        learning_order = []
-        return (missing_concepts, learning_order)
-    else
+    if !haskey(kg.nametoid, ntarget)
         println("$(target) is not in knowledge graph.")
-        return ()
+        return []
     end
+    targetid = kg.nametoid[ntarget]
+    subgraph_size_dict = Dict{Int, Int}()
+    subgraph_vertexes = dfs_postordering(kg.graph, targetid, neighbors_sort_fn=nothing)
+    subgraph_size_dict[targetid] = length(subgraph_vertexes)
+    pop!(subgraph_vertexes)
+    for vertex in subgraph_vertexes
+        subgraph_size_dict[vertex] = length(dfs_postordering(kg.graph, vertex, neighbors_sort_fn=nothing))
+    end
+    sort_fn = children -> sort(children, lt=(x, y)->subgraph_size_dict[x] > subgraph_size_dict[y])
+    learning_order = dfs_postordering(kg.graph, targetid, neighbors_sort_fn=sort_fn)
+    return learning_order
+    
 end
 
 export init_analyer, print_concepts, get_missing_concepts, get_duplicate_concepts, get_known_concepts, find_cycles, init_knowledge_graph, export_knowledge_tree, export_knowledge_graph_towards_target, generate_learning_plan
