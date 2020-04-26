@@ -133,7 +133,7 @@ procedure DFS-iterative(G, v) is
 
 this method is not recursive, because having the knowledge graph size limited by julia call stack size limit is not ok.
 
-this method will use a function to sort a vertex's neighbors before traversing them to guarantee deterministic ordering. notice that neighbors_sort_fn needs to output the reverse of your intended traverse order because we are using a stack to hold the sorted vertex. you can supply nothing to neighbors_sort_fn to slightly speed up the program.
+this method will use a function to sort a vertex's neighbors before traversing them to guarantee deterministic ordering. notice that neighbors_sort_fn needs to output the reverse of your intended traverse order because we are using a stack to hold the sorted vertex list. you can supply nothing to neighbors_sort_fn to slightly speed up the program.
 """
 function dfs_postordering(graph::SimpleDiGraph, start::Int; neighbors_sort_fn = reverse ∘ sort)
     S = [start]
@@ -267,6 +267,12 @@ function generate_learning_plan(kg::KnowledgeGraph, target::String)
     for vertex in subgraph_vertexes
         subgraph_size_dict[vertex] = length(dfs_preordering(kg.graph, vertex))
     end
+    
+    # println("subgraph size:")
+    # for (k, v) in subgraph_size_dict
+    #     println("  $(kg.idtoname[k]): $(v)")
+    # end
+
     sort_fn = children -> sort(children, lt=(x, y)->subgraph_size_dict[x] > subgraph_size_dict[y])
     learning_order = dfs_postordering(kg.graph, targetid, neighbors_sort_fn=sort_fn)
     return learning_order

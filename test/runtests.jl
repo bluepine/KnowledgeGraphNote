@@ -17,29 +17,29 @@ include("notes.jl")
     @test [["a", "b", "c"]] == KnowledgeGraphNote.find_cycles(cyclickg)
     # println(KnowledgeGraphNote.generate_learning_plan(mathkg, math_notes,  "Borel measure"))
     
+    
+    target = "borel sigma-algebra"    
+    @test mathkg.idtoname[KnowledgeGraphNote.generate_learning_plan(mathkg, target)] == ["set", "sigma-algebra", "metric", "metric space", "open set", "closed set", "topological space", "borel sigma-algebra"]
+
     # # it's not a good idea to write files in unit tests. i'll have to come up with something else to unittest these two functions
-    KnowledgeGraphNote.export_knowledge_graph(mathkg, "./math.dot")
-    KnowledgeGraphNote.export_knowledge_graph_towards_target(mathkg, "borel sigma-algebra", "./mathradonmeasure.dot")
-    println(mathkg.idtoname[KnowledgeGraphNote.generate_learning_plan(mathkg, "borel sigma-algebra")])
-
-
-
+    # KnowledgeGraphNote.export_knowledge_graph(mathkg, "./math.dot")
+    # KnowledgeGraphNote.export_knowledge_graph_towards_target(mathkg, target, "./target.dot")
 
 
     
 ######################### testing library internal functions
     dfs_postordering_test1_kg = KnowledgeGraphNote.init_knowledge_graph(dfs_postordering_test1)
-    KnowledgeGraphNote.export_knowledge_graph(dfs_postordering_test1_kg, "./dfs_postordering_test1.dot")
+    # KnowledgeGraphNote.export_knowledge_graph(dfs_postordering_test1_kg, "./dfs_postordering_test1.dot")
     postorder = KnowledgeGraphNote.dfs_postordering(dfs_postordering_test1_kg.graph, 1)
     @test ["d", "b", "e", "c", "t", "a"] == dfs_postordering_test1_kg.idtoname[postorder]
 
     dfs_postordering_test2_kg = KnowledgeGraphNote.init_knowledge_graph(dfs_postordering_test2)
-    KnowledgeGraphNote.export_knowledge_graph(dfs_postordering_test2_kg, "./dfs_postordering_test2.dot")
+    # KnowledgeGraphNote.export_knowledge_graph(dfs_postordering_test2_kg, "./dfs_postordering_test2.dot")
     postorder = KnowledgeGraphNote.dfs_postordering(dfs_postordering_test2_kg.graph, 1)
     @test ["d", "b", "c", "a"] == dfs_postordering_test2_kg.idtoname[postorder]
 
     dfs_postordering_test3_kg = KnowledgeGraphNote.init_knowledge_graph(dfs_postordering_test3)
-    KnowledgeGraphNote.export_knowledge_graph(dfs_postordering_test3_kg, "./dfs_postordering_test3.dot")
+    # KnowledgeGraphNote.export_knowledge_graph(dfs_postordering_test3_kg, "./dfs_postordering_test3.dot")
     postorder = KnowledgeGraphNote.dfs_postordering(dfs_postordering_test3_kg.graph, 1)
     @test ["f", "e", "b", "d", "c", "a"] == dfs_postordering_test3_kg.idtoname[postorder]
     
