@@ -319,5 +319,41 @@ function write_notes_for_target_concept_to_md_file(kg::KnowledgeGraph, concepts:
     write_string_to_file(md_text, path)
 end
 
-export print_concepts, get_missing_concepts, get_duplicate_concepts, get_known_concepts, find_cycles, init_knowledge_graph,  export_knowledge_graph_towards_target, generate_learning_plan, write_notes_for_target_concept_to_md_file, export_knowledge_graph, Concept
+"""
+utility function that checks for duplicate, missing and cyclical concepts
+return false if a problem is found. otherwise return true
+"""
+function check_notes(concepts::Array{Concept, 1})
+    dc = get_duplicate_concepts(concepts)
+    if length(dc) > 0
+        println("duplicate concepts:")
+        for entry in dc
+            println(entry)
+        end
+        return false
+    end
+
+    kg = init_knowledge_graph(concepts)
+    cycles = find_cycles(kg)
+    if length(cycles) > 0
+        println("cycle(s) found")
+        for c in cycles
+            println(c)
+        end
+        return false
+    end
+
+    mc = get_missing_concepts(concepts)
+    if length(mc) > 0
+        println("missing concepts:")
+        for entry in mc
+            println(entry)
+        end
+        return false
+    end
+    
+    return true
+end
+
+export print_concepts, get_missing_concepts, get_duplicate_concepts, get_known_concepts, find_cycles, init_knowledge_graph,  export_knowledge_graph_towards_target, generate_learning_plan, write_notes_for_target_concept_to_md_file, export_knowledge_graph, Concept, check_notes
 end # module
