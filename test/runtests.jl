@@ -30,6 +30,7 @@ include("notes.jl")
     @test check_notes(duplicate_notes) == false
     @test check_notes(math_notes) == false
     @test check_notes(cyclic_notes) == false
+    @test getfield.(fuzzy_search(math_notes, "rado measure"), :name) == ["radon measure"]
     
     ######################### testing library internal functions
     dfs_postordering_test1_kg = KnowledgeGraphNote.init_knowledge_graph(dfs_postordering_test1)

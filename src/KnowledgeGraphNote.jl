@@ -2,6 +2,7 @@ module KnowledgeGraphNote
 
 using LightGraphs
 using UUIDs
+using StringDistances
 
 struct Concept
     name::String
@@ -355,5 +356,10 @@ function check_notes(concepts::Array{Concept, 1})
     return true
 end
 
-export print_concepts, get_missing_concepts, get_duplicate_concepts, get_known_concepts, find_cycles, init_knowledge_graph,  export_knowledge_graph_towards_target, generate_learning_plan, write_notes_for_target_concept_to_md_file, export_knowledge_graph, Concept, check_notes
+function fuzzy_search(concepts::Array{Concept, 1}, search_term)
+    idx = findall(search_term, getfield.(concepts, :name),  Levenshtein())
+    return concepts[idx]
+end
+
+export print_concepts, get_missing_concepts, get_duplicate_concepts, get_known_concepts, find_cycles, init_knowledge_graph,  export_knowledge_graph_towards_target, generate_learning_plan, write_notes_for_target_concept_to_md_file, export_knowledge_graph, Concept, check_notes, fuzzy_search
 end # module
